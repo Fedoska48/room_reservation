@@ -1,35 +1,48 @@
-# app/crud/meeting_room.py
 from typing import Optional
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.base import CRUDBase
+from app.core.db import AsyncSessionLocal
 from app.models.meeting_room import MeetingRoom
+from app.schemas.meeting_room import MeetingRoomCreate
 
 
-# Создаем новый класс, унаследованный от CRUDBase.
-class CRUDMeetingRoom(CRUDBase):
+# функция принимает Pydantic-модель, а возвращает ORM-модель
+async def create_meeting_room(
+        new_room: MeetingRoomCreate
+) -> MeetingRoom:
+    """Создание переговорки."""
 
-    # Преобразуем функцию в метод класса.
-    async def get_room_id_by_name(
-            # Дописываем параметр self.
-            # В качестве альтернативы здесь можно
-            # применить декоратор @staticmethod.
-            self,
-            room_name: str,
-            session: AsyncSession,
-    ) -> Optional[int]:
+    # конвертация MeetingRoomCreate в словарь
+    new_room_data = new_room.dict()
+
+    # создаем объект модели MeetingRoom
+    # В параметры передаём пары "ключ=значение",для этого распаковываем словарь
+    db_room = MeetingRoom(**new_room_data)
+
+    # создаем асинхронную сессию через контектсный менеджер
+    async with AsyncSessionLocal() as session:
+        # добавляем объект в сессию
+        session.add(db_room)
+        # записываем данные в БД
+        await session.commit()
+        # Обновляем объект db_room:считываем данные из БД,чтобы получить его id
+        await session.refresh(db_room)
+    # Возвращаем только что созданный объект класса MeetingRoom.
+    return db_room
+
+
+async def get_room_id_by_name(
+        room_name: str  # прнимаем название преговорки
+) -> Optional[int]:  # может вернуть ID, либо ничего (если нет такой)
+    """Получить ID переговорки на основе Названия."""
+
+    # создаем сессию
+    async with AsyncSessionLocal() as session:
+        # делаем запрос к БД на получение объекта (объект Result)
         db_room_id = await session.execute(
-            select(MeetingRoom.id).where(
-                MeetingRoom.name == room_name
-            )
+            select(MeetingRoom.id).where(MeetingRoom.name == room_name)
         )
+        # извлекаем данные из объекта
         db_room_id = db_room_id.scalars().first()
-        return db_room_id
-
-
-# Объект crud наследуем уже не от CRUDBase,
-# а от только что созданного класса CRUDMeetingRoom.
-# Для инициализации передаем модель, как и в CRUDBase.
-meeting_room_crud = CRUDMeetingRoom(MeetingRoom)
+    return db_room_id

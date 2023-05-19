@@ -1,11 +1,11 @@
-# app/main.py
+# объект приложения app
 from fastapi import FastAPI
 
-# Импортируем главный роутер.
-from app.api.routers import main_router
+from app.api.meeting_room import router
 from app.core.config import settings
 
-app = FastAPI(title=settings.app_title)
+# объект приложения с настройками
+app = FastAPI(title=settings.app_title, description=settings.app_description)
 
-# Подключаем главный роутер.
-app.include_router(main_router)
+# подключаем роутер из meeting_room
+app.include_router(router)

@@ -1,31 +1,11 @@
-# app/schemas/meeting_room.py
-
+"""Создадим в проекте отдельные Pydantic-модели для разных эндпоинтов:
+в одной будет одно обязательное и одно опциональное поле,
+в другой — только опциональные."""
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
-class MeetingRoomBase(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str]
-
-
-class MeetingRoomCreate(MeetingRoomBase):
+class MeetingRoomCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str]
-
-
-class MeetingRoomUpdate(MeetingRoomBase):
-
-    @validator('name')
-    def name_cannot_be_null(cls, value):
-        if value is None:
-            raise ValueError('Имя переговорки не может быть пустым!')
-        return value
-
-
-class MeetingRoomDB(MeetingRoomBase):
-    id: int
-
-    class Config:
-        orm_mode = True
