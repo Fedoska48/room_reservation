@@ -2,3 +2,5 @@ uvicorn app.main:app --reload
 
 alembic revision --autogenerate -m "First migration"
 alembic upgrade head
+
+alembic init --template async alembic
