@@ -67,7 +67,6 @@ async def check_name_duplicate(
     return room_id
 
 
-
 async def read_all_rooms_from_db(session: AsyncSession) -> list[MeetingRoom]:
     """Получение списка всех переговорок"""
     # делаем запрос к БД на получение объектов
@@ -121,3 +120,30 @@ async def update_meeting_room(
     await session.refresh(db_room)
     return db_room
 
+
+async def delete_meeting_room(
+        # объект из БД для удаления
+        db_room: MeetingRoom,
+        # асинхронная сессия
+        session: AsyncSession
+) -> MeetingRoom:
+    """Удаление объекта переговорки"""
+    await session.delete(db_room)
+    await session.commit()
+    # не делаем refresh => еще содержится информация об объекте, ее возвращаем
+    return db_room
+
+
+async def check_meeting_room_exists(
+        meeting_room_id: int,
+        session: AsyncSession):
+    """Проверка существования объекта в БД"""
+    # идем в БД за объектом для изменений
+    meeting_room = await get_meeting_room_by_id(meeting_room_id, session)
+    # обрабатываем ситуацию, когда требуемой переговорки нет
+    if meeting_room is None:
+        raise HTTPException(
+            status_code=404,
+            detail='Переговорка не найдена!'
+        )
+    return meeting_room

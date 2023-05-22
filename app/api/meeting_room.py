@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.crud.meeting_room import create_meeting_room, get_room_id_by_name, \
     read_all_rooms_from_db, get_meeting_room_by_id, check_name_duplicate, \
-    update_meeting_room
+    update_meeting_room, check_meeting_room_exists, delete_meeting_room
 from app.schemas.meeting_room import MeetingRoomCreate, MeetingRoomBD, \
     MeetingRoomUpdate
 
@@ -71,17 +71,29 @@ async def partially_update_meeting_room(
         obj_in: MeetingRoomUpdate,
         session: AsyncSession = Depends(get_async_session)
 ):
-    # идем в БД за объектом для изменений
-    meeting_room = await get_meeting_room_by_id(meeting_room_id, session)
-    # обрабатываем ситуацию, когда требуемой переговорки нет
-    if meeting_room is None:
-        raise HTTPException(
-            status_code=404,
-            detail='Переговорка не найдена!'
-        )
-
+    # проверка на существовании комнаты
+    meeting_room = await check_meeting_room_exists(meeting_room_id, session)
+    # если name не пустое, проверяем на дубликаты
     if obj_in.name is not None:
         await check_name_duplicate(obj_in.name, session)
-
+    # обновляем объект
     meeting_room = await update_meeting_room(meeting_room, obj_in, session)
+    return meeting_room
+
+
+@router.delete(
+    '/{meeting_room_id}',
+    # схема ответа, после создания объекта в БД
+    response_model=MeetingRoomBD,
+    # исключать из ответа поля со значением None
+    response_model_exclude_none=True,
+)
+async def remove_meeting_room(
+        # ID обновляемого объекта
+        meeting_room_id: int,
+        session: AsyncSession = Depends(get_async_session)
+):
+    # проверка на существовании комнаты
+    meeting_room = await check_meeting_room_exists(meeting_room_id, session)
+    meeting_room = await delete_meeting_room(meeting_room, session)
     return meeting_room
