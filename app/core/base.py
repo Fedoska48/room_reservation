@@ -4,5 +4,6 @@ Alembic требуется для успешных миграций Base.metadat
 интерпретатор заодно увидит все остальные модели.
 Все новые модели нужно будет импортировать в файл app/core/base.py"""
 
-from app.core.db import Base # noqa
-from app.models.meeting_room import MeetingRoom # noqa
+from app.core.db import Base  # noqa
+from app.models.meeting_room import MeetingRoom  # noqa
+from app.models.reservation import Reservation  # noqa
