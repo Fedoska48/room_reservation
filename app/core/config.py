@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     app_title: str = 'Бронирование переговорок'
     app_description: str = 'Эффективное использование переговорок'
     database_url: str
+    secret: str
 
     class Config:
         # полный путь прописывать не обязательно,
