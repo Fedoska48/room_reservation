@@ -93,6 +93,8 @@ alembic upgrade head
 ```
 uvicorn app.main:app --reload
 ```
+При первом запуске автоматически создается "Суперюзер" с параметрами 
+FIRST_SUPERUSER_EMAIL, FIRST_SUPERUSER_PASSWORD из .env - файла
 
 ### Описание API:
 
