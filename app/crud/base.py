@@ -1,6 +1,10 @@
+from typing import Optional
+
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import User
 
 
 class CRUDBase:
@@ -34,12 +38,17 @@ class CRUDBase:
     async def create(
             self,
             obj_in,
-            session: AsyncSession
+            session: AsyncSession,
+            user: Optional[User] = None
     ):
         """Абстрактный метод для создания объекта."""
         # конвертация в словарь
         new_obj_data = obj_in.dict()
 
+        # если пользователь передан
+        if user is not None:
+            # дополняем словарь с данными для создания
+            new_obj_data['user_id'] = user.id
         # создаем объект модели
         # В параметры передаём пары "ключ=значение",
         # для этого распаковываем словарь

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.validators import check_meeting_room_exists, check_name_duplicate
 from app.core.db import get_async_session
+from app.core.user import current_superuser
 from app.crud.meeting_room import meeting_room_crud
 from app.crud.reservation import reservation_crud
 from app.schemas.meeting_room import MeetingRoomCreate, MeetingRoomBD, \
@@ -24,15 +25,19 @@ router = APIRouter()
     response_model=MeetingRoomBD,
     # исключать из ответа поля со значением None
     response_model_exclude_none=True,
+    # ограничение доступа, учитывая что не требуется передвать user в функцию
+    # проверка что запрос получен от superuser
+    dependencies=[Depends(current_superuser)]
 )
+# Описываем эндпойнт - верхнеуровнево.
+# Сама логика занесения в БД - в разделе CRUD и валидациях
 async def create_new_meeting_room(
         # Валидация по MeetingRoomCreate
         meeting_room: MeetingRoomCreate,
         # Указываем зависимость, предоставляющую объект сессии.
         session: AsyncSession = Depends(get_async_session)
 ):
-    """Описываем эндпойнт - верхнеуровнево шаги.
-    Сама логика занесения в БД - в разделе CRUD"""
+    """Только для суперюзеров."""
 
     # обработка дублей на уровне кода
     # передаем сессию в CRUD-функцию
@@ -65,6 +70,8 @@ async def get_all_meeting_rooms(
     response_model=MeetingRoomBD,
     # исключать из ответа поля со значением None
     response_model_exclude_none=True,
+    # проверка что запрос получен от superuser
+    dependencies=[Depends(current_superuser)]
 )
 async def partially_update_meeting_room(
         # ID обновляемого объекта
@@ -73,6 +80,7 @@ async def partially_update_meeting_room(
         obj_in: MeetingRoomUpdate,
         session: AsyncSession = Depends(get_async_session)
 ):
+    """Только для суперюзеров."""
     # проверка на существовании комнаты
     meeting_room = await check_meeting_room_exists(
         meeting_room_id, session
@@ -93,12 +101,15 @@ async def partially_update_meeting_room(
     response_model=MeetingRoomBD,
     # исключать из ответа поля со значением None
     response_model_exclude_none=True,
+    # проверка что запрос получен от superuser
+    dependencies=[Depends(current_superuser)]
 )
 async def remove_meeting_room(
         # ID обновляемого объекта
         meeting_room_id: int,
         session: AsyncSession = Depends(get_async_session)
 ):
+    """Только для суперюзеров."""
     # проверка на существовании комнаты
     meeting_room = await check_meeting_room_exists(
         meeting_room_id, session

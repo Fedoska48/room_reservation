@@ -5,7 +5,7 @@ from sqlalchemy import select, between, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase
-from app.models import Reservation
+from app.models import Reservation, User
 
 
 class CRUDReservation(CRUDBase):
@@ -54,5 +54,16 @@ class CRUDReservation(CRUDBase):
         reservations = reservations.scalars().all()
         return reservations
 
+    @staticmethod
+    async def get_by_user(
+            user: User,
+            session: AsyncSession
+    ):
+        """Список объектов Reservation связанных с пользователем."""
+        reservations = await session.execute(
+            select(Reservation).where(Reservation.user_id == user.id)
+        )
+        reservations = reservations.scalars().all()
+        return reservations
 
 reservation_crud = CRUDReservation(Reservation)
